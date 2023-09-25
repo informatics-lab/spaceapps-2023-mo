@@ -1,6 +1,9 @@
 # Nasa Space Apps 2023 - Met Office, Exeter
 
-[2023 challenges](https://www.spaceappschallenge.org/2023/challenges/)
+## Resources:
+- [2023 challenges](https://www.spaceappschallenge.org/2023/challenges/)
+- [Met Office blog](https://blog.metoffice.gov.uk/2023/09/07/nasa-space-apps-challenge-is-coming-to-exeter/)
+
 
 ## Space weather-y challenges
 
