@@ -1,5 +1,5 @@
 # Nasa Space Apps 2023 - Met Office, Exeter
-
+![NASA SpaceApps Logo](nasa_spaceapps_logo.png)
 ## Resources:
 - [2023 challenges](https://www.spaceappschallenge.org/2023/challenges/)
 - [Met Office blog](https://blog.metoffice.gov.uk/2023/09/07/nasa-space-apps-challenge-is-coming-to-exeter/)
@@ -18,8 +18,6 @@
 2. Work of SARt
 3. Video on Artemis?
 4. Open science storytelling
-
-![NASA SpaceApps Logo](nasa_spaceapps_logo.png)
 
 ## Introduction
 
