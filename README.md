@@ -23,19 +23,19 @@
 
 ## Introduction
 
-This series of tutorials is being delivered as part of the data bootcamp ahead of the NASA Space Apps Event 2022 hosted in Exeter by the Joint Centre of Excellence in Environmental Intelligence and TechExeter. The data bootcamp consist of three sessions:
+This series of tutorials on technical and data resources for NASA Space Apps Challenge 2023, hosted in Exeter by the Joint Centre of Excellence in Environmental Intelligence and TechExeter.
 
 ### Introduction to Python for Environmental Science
 
-In this session you will learn about useful Python packages for working with environmental datasets and work through some basic examples for loading and exploring different types of data.
+Learn about useful Python packages for working with environmental datasets and work through some basic examples for loading and exploring different types of data.
 
 ### Machine Learning with Weather Data
 
-In this session, you will be given a brief introduction to machine learning and have the opportunity to work through a simple (cloud computing) example, specifically using some readily available weather data.
+A brief introduction to machine learning and have the opportunity to work through a simple (cloud computing) example, specifically using some readily available weather data.
 
 ### Introduction to Weather and Climate Datasets
 
-In this session, you will be given a brief overview of the types of data we have available within the Met Office. These datasets are open source, you'll have the oppertunity download and explore this data through the example notebooks provided. This will give you the tools to explore weather and climate data yourself.
+A brief overview of the types of data we have available within the Met Office. These datasets are open source, you'll have the oppertunity download and explore this data through the example notebooks provided. This will give you the tools to explore weather and climate data yourself.
 
 ______________________________________________________________________
 
