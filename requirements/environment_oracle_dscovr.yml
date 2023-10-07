@@ -1,0 +1,9 @@
+name: spaceapps-mo-oracle-dscovr
+channels:
+ - conda-forge
+dependencies:
+ - python
+ - numpy
+ - matplotlib
+ - jupyterlab
+ - pandas
