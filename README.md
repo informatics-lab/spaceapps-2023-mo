@@ -4,7 +4,7 @@
 
 * [Introduction](#introduction)
 * [Resources](#resources)
-  * [Challenges related to space weather, and resources](#challenges-related-to-space-weather-and-resources)
+  * [Challenges related to space weather, resources, and teams](#challenges-related-to-space-weather-resources-and-teams)
   * [Creche-compatible challenges](#creche-compatible-challenges)
   * [Introduction to Python for Environmental Science](#introduction-to-python-for-environmental-science)
 
@@ -18,19 +18,23 @@ in Environmental Intelligence and TechExeter.
 
 * [2023 challenges](https://www.spaceappschallenge.org/2023/challenges/)
 * [Met Office blog](https://blog.metoffice.gov.uk/2023/09/07/nasa-space-apps-challenge-is-coming-to-exeter/)
-* [Exeter event (schedule, teams)](https://www.spaceappschallenge.org/2023/locations/exeter/)
+* [Exeter event](https://www.spaceappschallenge.org/2023/locations/exeter/)
+  * [Teams who took part](https://www.spaceappschallenge.org/2023/locations/exeter/?tab=teams)
 
-### Challenges related to space weather, and resources
+### Challenges related to space weather, resources, and teams
 
 1. [Develop the Oracle of DSCOVR](https://www.spaceappschallenge.org/2023/challenges/develop-the-oracle-of-dscovr/)
    1. 2 teams chose
       1. [BANSSAB](https://www.spaceappschallenge.org/2023/find-a-team/banssab/)
+         1. [Outputs](https://www.spaceappschallenge.org/2023/find-a-team/banssab/?tab=project)
       2. [Solar Storm](https://www.spaceappschallenge.org/2023/find-a-team/solar-storm/)
+         1. *No outputs*
 2. [Immersed in the Sounds of Space](https://www.spaceappschallenge.org/2023/challenges/immersed-in-the-sounds-of-space/)
    1. 1 team chose
       1. [Solar Sounds](https://www.spaceappschallenge.org/2023/find-a-team/solar-sounds/)
          1. Local event winners!
-         2. *Contained members of pre-event team [Solar Audible Experience](https://www.spaceappschallenge.org/2023/find-a-team/solar-sounds/)*
+         2. [Outputs](https://www.spaceappschallenge.org/2023/find-a-team/solar-sounds/?tab=project)
+         3. *Contained members of pre-event team [Solar Audible Experience](https://www.spaceappschallenge.org/2023/find-a-team/solar-sounds/)*
    2. Data: Solar Dynamics Observatory imagery in [`data/immersed_sounds_space/SDO/`](data/immersed_sounds_space/SDO/)
       1. Attribute as follows: ["Courtesy of NASA/SDO and the AIA, EVE, and HMI science teams."](https://sdo.gsfc.nasa.gov/data/rules.php)
       2. Data retrieval script: [`bin/download_sdo_data`](bin/download_sdo_data)
@@ -88,8 +92,8 @@ this easier.
 For a more in depth understanding of python, exploring these exellent tutorials is
 recommended:
 
-- Software Carpentry: <https://swcarpentry.github.io/python-novice-inflammation/index.html>
-- DataCamp: <https://www.datacamp.com/courses/intro-to-python-for-data-science>
+* Software Carpentry: <https://swcarpentry.github.io/python-novice-inflammation/index.html>
+* DataCamp: <https://www.datacamp.com/courses/intro-to-python-for-data-science>
 
 #### Python environment set up
 
