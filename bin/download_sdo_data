@@ -18,13 +18,20 @@ Usage: $0 START_DATE END_DATE CHANNEL RESOLUTION DOWNLOAD_PATH
 Download Solar Dynamics Observatory images to a local directory, for later sonification
 
 NOTE:
-* based on script from https://sdo.gsfc.nasa.gov/data/bestpractice.php
-  * converted from Mac/BSD date options to GNU date
-* naive, intended just for simple images
+* this script is based on script from https://sdo.gsfc.nasa.gov/data/bestpractice.php
+  * source script had no explicit licence
+  * changes made:
+    * converted from Mac/BSD date options to GNU date
+    * extended to allow retrievals based on synoptic solar rotation rate
+    * generally tightened up a little
+* this script is naive, intended just for retrieving simple images
   * use sunpy for:
     * more complex retrievals
     * to get .fits data better-suited for sophisticated sonification
   * see https://docs.sunpy.org/en/stable/tutorial/acquiring_data/jsoc.html
+* rules for use of imagery retrieved: https://sdo.gsfc.nasa.gov/data/rules.php
+  * TLDR: very permissive, but attribute as follows
+  * "Courtesy of NASA/SDO and the AIA, EVE, and HMI science teams."
 
 Positional parameters:
 * START_DATE: date to start downloading from, format YYYY/MM/DD
@@ -53,25 +60,32 @@ START_DATE=$1
 END_DATE=$2
 CHANNEL=$3
 RESOLUTION=$4
+# shellcheck disable=SC2086  # $5 unquoted to allow expansion of paths with ~/ or ~user/
+# * but as unquoted will break with paths with whitespace etc!
+# * more complex alternative to fix: https://stackoverflow.com/a/15859646
 DOWNLOAD_PATH=$(realpath $5)
 
-# Download cadence
+# Set cadence mode: controls time interval between downloaded images
+# * Currently available modes: ["solar" "daily"]
+# * TODO: expose as positional parameter / getopts option
 CADENCE_MODE="solar"
+
+# Calculate download cadence
 SECONDS_IN_DAY=$(( 24 * 60 * 60 ))
 if [ "$CADENCE_MODE" == "solar" ]; then
   # Use synodic (viewed from Earth) solar rotation rate at heliolatitude ~26N (/~26S!)
   # * https://www.star.bris.ac.uk/bjm/solar/solarrot.html
   # * https://en.wikipedia.org/wiki/Solar_rotation
   solar_rot_rate=27.25
-  # Perform multiplication with bc, truncating floating point component
+  # Multiply with bc; use scale to truncate decimal component -> get int result
   # * See https://linux.die.net/man/1/bc
   CADENCE_SECONDS=$(echo "scale=0;($solar_rot_rate * $SECONDS_IN_DAY) / 1" | bc)
   # Filter: only want 1 image from each solar rotation
   # Via .25 fraction, we'll cycle through 6 hour blocks: T00, T06, T12, T18
-  # Given channel+resolution images are usually available at ~15 min repeats
+  # Given channel+resolution images are *usually* available at ~15 min repeats
   # So unfiltered, would retrieve get ~4 images / H -> 24 images / block
   # Only want to retrieve 1 image per block
-  # So filter to minute 0N (minute 00 to 09) or 1N (minute 10 to 19) to get 1-2
+  # So filter to minute 0N (minute 00 to 09) or 1N (minute 10 to 19) to get ~0-3
   # images for the given block
   MMSS_FILTER="[0-1]???"
 elif [ "$CADENCE_MODE" == "daily" ]; then
@@ -143,7 +157,7 @@ do
     # Move the 1st downloaded image to $LOCAL_DIR, & any remaining to $ALTERNATIVES_DIR
     # * don't clobber pre-existing files (e.g. from earlier runs of script)
     # * so empty $STAGING_DIR after, in case --no-clobber means we've got leftovers here
-    # shellcheck disable=SC2224
+    # shellcheck disable=SC2224  # avoid false positive about mv missing a target
     mv --no-clobber --target-directory="$LOCAL_DIR" "$first_image"
     n_alternative_images="${#alternative_images[@]}"
     if (( n_alternative_images > 0 )); then
