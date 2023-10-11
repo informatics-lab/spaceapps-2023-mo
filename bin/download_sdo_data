@@ -1,0 +1,157 @@
+#! /usr/bin/env bash
+# Script to download Solar Dynamics Observatory images
+
+set -o errexit -o nounset -o pipefail
+
+error_msg() {
+  >&2 printf "[ERROR] %s\n" "$@"
+}
+
+info_msg() {
+  >&2 printf "[INFO] %s\n" "$@"
+}
+
+usage() {
+  >&2 cat << EOF
+Usage: $0 START_DATE END_DATE CHANNEL RESOLUTION DOWNLOAD_PATH
+
+Download Solar Dynamics Observatory images to a local directory, for later sonification
+
+NOTE:
+* based on script from https://sdo.gsfc.nasa.gov/data/bestpractice.php
+  * converted from Mac/BSD date options to GNU date
+* naive, intended just for simple images
+  * use sunpy for:
+    * more complex retrievals
+    * to get .fits data better-suited for sophisticated sonification
+  * see https://docs.sunpy.org/en/stable/tutorial/acquiring_data/jsoc.html
+
+Positional parameters:
+* START_DATE: date to start downloading from, format YYYY/MM/DD
+* END_DATE: date to start download until, format YYYY/MM/DD
+* CHANNEL: AIA channel to use
+           valid: 1700, 0304, 1600, 0171, 0193, 0211, 0335, 0094, 0131
+           invalid: 6173, 4500
+* RESOLUTION: image resolution to use
+              valid: 512, 1024, 2048, 4096
+* DOWNLOAD_PATH: where to download imagery to, e.g. /my/local/dir
+EOF
+}
+
+# Get positional parameters from command line
+n_positional_expected=5
+n_positional_actual="$#"
+positional_actual="$*"
+if [ "$n_positional_actual" != "$n_positional_expected" ]; then
+    error_msg "Expected $n_positional_expected positional parameters" \
+              "Got $n_positional_actual" \
+              "You called as: $0 $positional_actual"
+    usage
+    exit 1
+fi
+START_DATE=$1
+END_DATE=$2
+CHANNEL=$3
+RESOLUTION=$4
+DOWNLOAD_PATH=$(realpath $5)
+
+# Download cadence
+CADENCE_MODE="solar"
+SECONDS_IN_DAY=$(( 24 * 60 * 60 ))
+if [ "$CADENCE_MODE" == "solar" ]; then
+  # Use synodic (viewed from Earth) solar rotation rate at heliolatitude ~26N (/~26S!)
+  # * https://www.star.bris.ac.uk/bjm/solar/solarrot.html
+  # * https://en.wikipedia.org/wiki/Solar_rotation
+  solar_rot_rate=27.25
+  # Perform multiplication with bc, truncating floating point component
+  # * See https://linux.die.net/man/1/bc
+  CADENCE_SECONDS=$(echo "scale=0;($solar_rot_rate * $SECONDS_IN_DAY) / 1" | bc)
+  # Filter: only want 1 image from each solar rotation
+  # Via .25 fraction, we'll cycle through 6 hour blocks: T00, T06, T12, T18
+  # Given channel+resolution images are usually available at ~15 min repeats
+  # So unfiltered, would retrieve get ~4 images / H -> 24 images / block
+  # Only want to retrieve 1 image per block
+  # So filter to minute 0N (minute 00 to 09) or 1N (minute 10 to 19) to get 1-2
+  # images for the given block
+  MMSS_FILTER="[0-1]???"
+elif [ "$CADENCE_MODE" == "daily" ]; then
+  CADENCE_SECONDS="$SECONDS_IN_DAY"
+  # Filter: be greedy - get all images for the T00 block (T00 implicit in daily cadence)
+  MMSS_FILTER="????"
+else
+  error_msg "Unknown CADENCE_MODE: $CADENCE_MODE"
+  exit 1
+fi
+
+# SDO website URLs we'll retrieve images from
+SDO_URL="https://sdo.gsfc.nasa.gov"
+BROWSE_DIR="$SDO_URL/assets/img/browse"
+
+# Where we'll download to
+# * see below for purposes
+LOCAL_DIR=$DOWNLOAD_PATH
+STAGING_DIR="$LOCAL_DIR/staging"
+ALTERNATIVES_DIR="$LOCAL_DIR/alternatives"
+dirs=( "$LOCAL_DIR" "$STAGING_DIR" "$ALTERNATIVES_DIR" )
+for dir in "${dirs[@]}"; do
+  mkdir --parents "$dir"
+done
+
+# Get unix timestamp versions of our requested start & end dates
+START_SECONDS=$(date --utc --date="${START_DATE}" +"%s")
+END_SECONDS=$(date --utc --date="${END_DATE}" +"%s")
+
+info_msg \
+"$(date --utc): downloading SDO images:" \
+"* from $START_DATE to $END_DATE" \
+"* from AIA channel $CHANNEL at resolution $RESOLUTION" \
+"* to $LOCAL_DIR" \
+"(alternative images for each timestep are in $ALTERNATIVES_DIR)"
+
+# For each date, download matched images
+# * downloads to a staging directory $STAGING_DIR
+# * so clear $STAGING_DIR beforehand, in case rerunning script
+find "$STAGING_DIR" -type f -delete
+for (( now_secs=START_SECONDS; now_secs<=END_SECONDS; now_secs+=CADENCE_SECONDS ))
+do
+  NEXT_DATE_PATH=$(date --utc --date="@${now_secs}" +%Y/%m/%d)
+  NEXT_DATE_STRING=$(date --utc --date="@${now_secs}" +%Y%m%d_%H)
+  URL=${BROWSE_DIR}/${NEXT_DATE_PATH}
+
+  # Specify filename patterns (supports wildcards) to accept for download
+  ACCEPT="${NEXT_DATE_STRING}${MMSS_FILTER}_${RESOLUTION}_${CHANNEL}.jpg"
+  info_msg "Downloading images from $URL matching $ACCEPT"
+
+  # Download any matches to staging directory
+  wget --quiet \
+  --directory-prefix="$STAGING_DIR" --no-directories --level=1 --recursive --no-parent \
+  --no-check-certificate --execute robots=off --reject "index.html*" --accept "$ACCEPT" \
+  "$URL"
+
+  # Identify any downloaded images in $STAGING_DIR, and process any present
+  # * uses crazy read approach to count files: https://stackoverflow.com/a/23357277
+  downloaded_images=()
+  while IFS="" read -r -d $'\0'; do
+    downloaded_images+=("$REPLY")
+  done < <(find "$STAGING_DIR" -type f -print0)
+  n_downloaded="${#downloaded_images[@]}"
+  if (( "$n_downloaded" > 0 )); then
+    # Identify 1st downloaded image, and any remaining alternatives
+    first_image="${downloaded_images[0]}"
+    alternative_images=( "${downloaded_images[@]:1}" )
+
+    # Move the 1st downloaded image to $LOCAL_DIR, & any remaining to $ALTERNATIVES_DIR
+    # * don't clobber pre-existing files (e.g. from earlier runs of script)
+    # * so empty $STAGING_DIR after, in case --no-clobber means we've got leftovers here
+    # shellcheck disable=SC2224
+    mv --no-clobber --target-directory="$LOCAL_DIR" "$first_image"
+    n_alternative_images="${#alternative_images[@]}"
+    if (( n_alternative_images > 0 )); then
+      mv --no-clobber --target-directory="$ALTERNATIVES_DIR" "${alternative_images[@]}"
+    fi
+    find "$STAGING_DIR" -type f -delete
+  fi
+
+done
+
+info_msg "" "$(date --utc): download complete"
